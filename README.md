@@ -18,6 +18,18 @@ typora-root-url: imgs
 
 
 
+- Attention U-Net: Learning Where to Look for the Pancreas
+
+在skip connection中引入上一尺度的信息，形成attention gate
+
+处理精细分割的两种方式：multi-stage， attention
+
+![Semantic_AttentionUnet](/Semantic_AttentionUnet.png)
+
+
+
+
+
 ### Detection
 
 
