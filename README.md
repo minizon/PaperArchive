@@ -1,5 +1,5 @@
 ---
-typora-root-url: imgs
+typora-root-url: ./
 ---
 
 # Paper Archive
@@ -36,3 +36,22 @@ typora-root-url: imgs
 
 ### Caption
 
+
+
+### Image Synthesis
+
+
+
+
+
+
+
+### OCR
+
+- Attention-based Extraction of Structured Information from Street View Imagery
+
+84.2% on FSNS (four views)
+
+提到了attention机制的permutation invariant，为了使attention和位置相关，本文增加了空间位置的编码信息；
+
+本文的saliency map是基于的反向梯度，attention map则是基于的前向计算
