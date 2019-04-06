@@ -1,5 +1,5 @@
 ---
-typora-root-url: ./
+typora-root-url: assets
 ---
 
 # Paper Archive
@@ -40,6 +40,15 @@ typora-root-url: ./
 
 ### Image Synthesis
 
+- High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs 2018.8
+
+  <https://github.com/NVIDIA/pix2pixHD>
+
+  尺度1024x2048
+
+  采用了coarse-to-fine的策略，现在512x1024上生成。Loss方面不仅用GAN loss，还在discriminator的中间层进行feature matching。针对instance引入edge map使得边界上有较强的先验信息。
+
+  ![GAN_pix2pixHD](/GAN_pix2pixHD.png)
 
 
 
