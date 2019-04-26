@@ -28,6 +28,17 @@ typora-root-url: assets
 
 
 
+- Semantic Human Matting 2018.9
+
+  文中提到了语义分割与matting所要实现的细节分割是不一样的
+
+  the matting module is highly nonlinear and trained to focus on structural patterns of details, thus the semantic information from input hardly retains.
+
+  本文也是设计了两个网络来分别完整大致的语义分割和精细的matting，需要通过pretrain来预热网络，之后再进行端到端的训练。Loss方面除了alpha prediction loss和合成loss(compositional loss)外，还增加了decomposition loss
+
+  ![Segmentation_HumanMatting](/Segmentation_HumanMatting.png)
+
+
 
 
 ### Detection
@@ -68,11 +79,12 @@ typora-root-url: assets
 
   $\sigma(t_{x}) = x-x_{c},  \sigma(t_{y})=y-y_{c}, t_{w}=\log(w/w_{a}), t_{y}=\log(h/h_{a})$
 
-  这里x,y 已经相对图像(w,h)作了归一化
+  这里x, y, w, h已经相对图像(w,h)作了归一化
 
   指出了在实验中Focal loss失效了
 
   YOLOv3 is a good detector.  It’s fast, it’s accurate.  It’s not as great on the COCO average AP between .5 and .95 IOU metric. But it’s very good on the old detection metric of .5 IOU.
+
 
 
 - Region Proposal by Guided Anchoring 2019.1
@@ -86,6 +98,13 @@ typora-root-url: assets
   对于正负样本的设置，在合适的scale的feature map上设置center region作为正样本采样区域；设置ignore region作为正负样本的隔离区，隔离区在每个scale上都有；除正样本区域和隔离区外，均设置为outside region作为负样本区域。
 
   Feature adaption采样1x1conv估计offsef field应用于deformable conv（调整的应该是局部偏差量，不是整体尺寸的缩放）
+
+- ThunderNet: Towards Real-time Generic Object Detection 2019.3
+
+  整体感觉工程化，从网络结构的一些参数上可能参考了Light Head R-CNN，Context Enhancement Module对三个尺度的特征进行求和，Spatial Attention Module在motivation上更多是想让较少的特征通道表达更多有效的信息，利用RPN中的特征层（具备对前后景的感知）作为condition
+
+  ![Detection_ThunderNet](/Detection_ThunderNet.png)
+
 
 
 
