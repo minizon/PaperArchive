@@ -24,7 +24,7 @@ image cascade net, 这里的实时还是指计算机上显卡
 
 在mask rcnn的基础上并行一路semantic segmentaion，实现panoptic segmentation。
 
-针对重叠的情况，制定了三个规则：不同instance的重叠部分利用confidence score来区分，instance与semantic的重叠部分有限选择instance，semantic 低于某个阈值的需要剔除
+针对重叠的情况，制定了三个规则：不同instance的重叠部分利用confidence score来区分，instance与semantic的重叠部分优先选择instance，semantic 低于某个阈值的需要剔除
 
 ![Semantic_Panoptic](/Semantic_Panoptic.png)
 
@@ -177,7 +177,7 @@ Feature adaption采样1x1conv估计offsef field应用于deformable conv（调整
 
 
 
-####Video
+#### Video
 
 > TACNet: Transition-Aware Context Network for Spatio-Temporal Action Detection 2019.05
 
@@ -221,7 +221,7 @@ Multi-head的关系式$d_{k}=d_{v}=d_{model}/h=64, \, h=8$
 
 
 
-####Caption
+#### Caption
 
 > From Captions to Visual Concepts and Back cvpr2015
 
@@ -265,7 +265,21 @@ Multi-head的关系式$d_{k}=d_{v}=d_{model}/h=64, \, h=8$
 
 
 
-####VQA
+> Video Storytelling 2018.07
+
+视频讲故事需要处理两个子问题，一个是从中提取出important clips，另一个则是将这些clips表述成连贯的段落。
+
+作者在clip到sentence问题上使用embedding的方式，对相关的句子使用ranking loss
+
+在选取clip时，提出Narrator Network，decide both when to sample a clip and the length of the sampled clip.
+
+针对when to sample a clip，利用Candidate Gate来判断当前位置与上个sample位置是否有足够的差异，若差异足够则将其视为一个candidate；再利用Clip Indicator来判断当前位置是否对一个story的叙述足够重要；Clip Length则是完成对clip长度的估计，以当前帧为中心位置。
+
+对于NLP的训练方法，依然采用基于Cider的增强学习方法，不过其baseline reward并不是基于推理时一次固定的结果，而是通过随机抽取视频帧K times做的平均。**很有可能的情况是提取clip的方式并不是非常有效，这在video summarization中有提及。**
+
+
+
+#### VQA
 
 > Visual Question Reasoning on General Dependency Tree 2018
 
@@ -319,7 +333,7 @@ To prevent mode collapse problem, we followed the strategy of WGAN.
 
 
 
-####Video
+#### Video
 
 > What Actions are Needed for Understanding Human Actions in Videos? 2017.08
 
@@ -442,7 +456,7 @@ We might instead "factor" the architecture to treat spatial structures and tempo
 
 文中提到了单向的lateral connection和双向的效果差不多
 
-每个视频用64帧，Slow用8帧，Fast用32帧，Fast的通道数是Slow的$1/\alpha=1/4​$（有趣的是TSM用的双向shift也是1/4）
+每个视频用64帧，Slow用8帧，Fast用32帧，Fast的通道数是Slow的$1/\alpha=1/4$（有趣的是TSM用的双向shift也是1/4）
 
 作者提到Slow在靠前的卷积层用时间卷积会降低分类性能；但是Fast则在每层都有时间卷积
 
@@ -462,7 +476,7 @@ lateral对Slow的提升有3个点，相对无lateral的slowfast有2.1个点；Re
 
 
 
->Lightweight Network Architecture for Real-Time Action Recognition 2019.05
+> Lightweight Network Architecture for Real-Time Action Recognition 2019.05
 
 总结了对视频序列分类的方法
 
@@ -478,6 +492,8 @@ In multi-head self-attention block, a temporal interrelationship between frames 
 We train and validate our models on 16-frame input sequences that are formed by sampling every second frame from the original video. 处理视频的帧率为2fps
 
 transformer的特征维度为512，head 为8，提到了最佳的对应公式$d_{q}=d_{k}=d_{v} = \frac{512}{M}$
+
+
 
 > Video Action Transformer Network 2019.05
 
@@ -496,6 +512,42 @@ Our problem setup has a natural choice for the query (Q), key (K) and value (V) 
 作者还对location information做了embedding，加入到context特征中，但这部分没有详细展开说明
 
 在实验部分，作者说明了action tranformer适合动作识别，而原来的I3D head适合对人物进行box拟合
+
+
+
+> Grouped Spatial-Temporal Aggregation for Efficient Action Recognition 2019.09
+
+该文提出将通道维度进行spatial和temporal groups的分离，主要是针对依赖时间序列推理的动作类别
+
+<img src="/Classification_GST.png" style="zoom:75%;" />
+
+spatial支路各帧用2D卷积，temporal支路各帧用3D卷积
+
+比较神奇是通过实验该文也建议用1/4的支路做temporal modelling，网络只在ImageNet上pretrain，Sth数据集性能超过TSM？
+
+思考：双流法在单个网络结构下的实现
+
+
+
+> Spatio-Temporal FAST 3D Convolutions for Human Action Recognition 2019.10
+
+该文的思路是对3x3x3卷积在HWT三维平面在做有序分解，没有提及CoST的方法
+
+![](/Classification_FAST.png)
+
+分析部分对水平运动和竖直运动解释较清晰，但效果没有特别好
+
+
+
+#### Zero Shot
+
+>  From Red Wine to Red Tomato: Composition with Context 2017
+
+总体上还属于探索性的方向，方法比较生硬
+
+![](/Classification_Compositionality.png)
+
+
 
 
 
@@ -623,7 +675,17 @@ GC block在Kinetics上较Non-local block优势基本在于减少计算量，是�
 
 
 
-###Understanding
+> BlazeFace: Sub-millisecond Neural Face Detection on Mobile GPUs 2019.07
+
+将depthwise的kernel从$3 \times 3$扩大到$5\times 5$，将重叠的bbox进行加权平均
+
+作者观察到pointwise卷积比depthwise要耗时，因此扩大depthwise的卷积计算耗时对整体影响不大
+
+提到Pooling Pyramid Network中暗示一定分辨率之后的特征作用不大，把$8\times 8$之后的anchor都加到$8\times 8$这一层
+
+
+
+### Understanding
 
 > MovieGraphs: Towards Understanding Human-Centric Situations from Videos
 
@@ -699,7 +761,7 @@ $L_{3} = -\frac{1}{N} \sum_{i=1}{N} \log\frac{e^{s(\cos(\theta_{y_{i}}+m))}}{e^{
 
 ### OCR
 
-- Attention-based Extraction of Structured Information from Street View Imagery
+> Attention-based Extraction of Structured Information from Street View Imagery
 
 84.2% on FSNS (four views)
 
@@ -723,7 +785,7 @@ $L_{3} = -\frac{1}{N} \sum_{i=1}{N} \log\frac{e^{s(\cos(\theta_{y_{i}}+m))}}{e^{
 
 ### Attention
 
-####Hard
+#### Hard
 
 > Recurrent Models of Visual Attention
 
@@ -757,11 +819,23 @@ However, most methods attempt to combine the features of adjacent stages to enha
 
 作者认为多尺度的特征融合依然缺乏global context prior attention，而引入的SENet的channel-wise attention 又会导致缺乏pixel-wise information.
 
-We consider that the main character of decoder module is to repair category pixel localization. Furthermore, high-level features with abundant category information can be used to wieght low-level information to select precise resolution details.
+We consider that the main character of decoder module is to repair category pixel localization. Furthermore, high-level features with abundant category information can be used to weight low-level information to select precise resolution details.
 
 ![Attention_GlobalAttentionUpsample](/Attention_GlobalAttentionUpsample.png)
 
 Global Attention Upsample 与Attention Unet的Attention Gate具有明显的不同，Attention Gate对空间位置上的特征响应进行了调整，而Global Attention Upsample则是对各个特征（concept）的权重进行了调整；channel attention与spatial attention的区别？
+
+参考文章<https://blog.csdn.net/u010142666/article/details/80994439>
+
+对于Feature Pyramid Attention，**类似于PSPNet、DeepLab采用空间金字塔pooling实现不同的尺度以及多孔金字塔池化ASPP结构，问题一：pooling容易丢失掉局部信息，问题二：ASPP因为是一种稀疏的操作会造成棋盘伪影效应，问题三：只是简单地多个scale concat缺乏上下文的信息，没有关注上下文信息情况下效果不佳（下图作图为现有的方法），该部分处理主要是用在处理高层特征上的操作**
+
+**在提取到高层特征之后不再进行pooling的操作，而是通过三个继续的卷积实现更高层的语义，我们知道更高层的语义会更加接近ground truth的情况，会关注一些物体信息，所以用更高层的语义来作为一种Attention的指导，与高层特征做完1×1卷积不变化大小的情况下进行相乘，也就是加强了具有物体信息的部位带有的权值，得到了带有Attention的输出，同时因为金字塔卷积的结构采用不同大小的卷积核，代表着不同的感受野，所以也解决不同物体不同scale的问题。**
+
+
+
+对于Global Attention Upsample，**采用了解码器decoder也就是反卷积之类再加上底层的特征，一层层地往上累加以便恢复图像细节，论文中讲到了这种虽然是可以实现底层和高层的结合以及图像重构，但是computation burden**，这里指的是cancat之后的卷积操作
+
+**抛弃了decoder的结构，原始形式是直接用底层特征加FPA得到的高层特征，但在skip底层特征的时候论文采用了高层特征作为指导设置了相应的权重，使得底层与高层的权重保持一致性，高层特征采用了Global Pooling得到权重，底层特征经过一个卷积层实现与高层特征相同数量的map，然后相乘后再高底层相加。这样减少了decoder复杂的计算同时也是一种新的高底层融合的形式**
 
 
 
@@ -790,6 +864,20 @@ Learnable的方式又分为hard和soft，而Spatial Transformer Networks则介�
 > TernaryNet: faster deep model inference without GPUs for medical 3D segmentation using sparse and binary convolutions
 
 利用只有$\{-1,0,1\}$三个取值的神经元构建网络，利用Hamming distance来进行卷积运算
+
+
+
+### NAS
+
+> Auto-Keras: An Efficient Neural Architecture Search System
+
+NAS的问题是将原本网络结构设计时的一些超参进行简化，同时在优化算法上应用某些规则来简化求解的难度
+
+由于大量的时间消耗在训练过程，即是在其定义的三步（update、generation、observation）的observation中，这就需要利用之前相似的已训练的网络层参数来作初始化（这是前提假设）
+
+作者通过编辑距离和高斯过程来对网络的搜索过程进行参数化，文中提到了树状结构搜索中的$A^{\star}$算法
+
+文中定义了四种操作，加层deep，加滤波器数量wide，加求和操作skip，加拼接操作concatenate
 
 
 
