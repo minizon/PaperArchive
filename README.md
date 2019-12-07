@@ -56,15 +56,31 @@ image cascade net, 这里的实时还是指计算机上显卡
 
 
 
-- Semantic Human Matting 2018.9
+> Fast Deep Matting for Portrait Animation on Mobile Phone 2017.07
 
-  文中提到了语义分割与matting所要实现的细节分割是不一样的
+双阶段的方式，处理的分辨率是$128\times 128$
 
-  the matting module is highly nonlinear and trained to focus on structural patterns of details, thus the semantic information from input hardly retains.
+![](/Segmentation_PortraitMatting.png)
 
-  本文也是设计了两个网络来分别完整大致的语义分割和精细的matting，需要通过pretrain来预热网络，之后再进行端到端的训练。Loss方面除了alpha prediction loss和合成loss(compositional loss)外，还增加了decomposition loss
 
-  ![Segmentation_HumanMatting](/Segmentation_HumanMatting.png)
+
+>  Semantic Human Matting 2018.9
+
+文中提到了语义分割与matting所要实现的细节分割是不一样的
+
+the matting module is highly nonlinear and trained to focus on structural patterns of details, thus the semantic information from input hardly retains.
+
+本文也是设计了两个网络来分别完整大致的语义分割和精细的matting，需要通过pretrain来预热网络，之后再进行端到端的训练。Loss方面除了alpha prediction loss和合成loss(compositional loss)外，还增加了decomposition loss
+
+![Segmentation_HumanMatting](/Segmentation_HumanMatting.png)
+
+
+
+> AUTOMATIC SKIN AND HAIR MASKING USING FULLY CONVOLUTIONAL NETWORKS
+
+依然是coarse to fine的思路
+
+
 
 
 
@@ -193,7 +209,7 @@ The standard SSD performs action detection from multiple feature maps with diffe
 
 
 
-###NLP
+### NLP
 
 > Attention Is All You Need 2017.12
 
@@ -685,6 +701,18 @@ GC block在Kinetics上较Non-local block优势基本在于减少计算量，是�
 
 
 
+> Inception-v4, Inception-ResNet and the Impact of Residual Connections on Learning 2016
+
+Inception V1就引入了并行网络实现多尺度的概念 1x1,3x3,5x5，也有dimension reduction的概念
+
+Inception V2 主要是降低计算量，采用更多的因式分解5x5变两个3x3，3x3变成1x3，3x1
+
+Inception V3是发现辅助分类器再训练快结束时发挥的作用较大，同时使用了更大的卷积核并采用分解的方式降低参数量
+
+Inception V4再stem中也加入了并联网络，对每个尺度设计了专门的降尺度模块，并且尝试了res结构
+
+
+
 ### Understanding
 
 > MovieGraphs: Towards Understanding Human-Centric Situations from Videos
@@ -768,6 +796,42 @@ $L_{3} = -\frac{1}{N} \sum_{i=1}{N} \log\frac{e^{s(\cos(\theta_{y_{i}}+m))}}{e^{
 提到了attention机制的permutation invariant，为了使attention和位置相关，本文增加了空间位置的编码信息；
 
 本文的saliency map是基于的反向梯度，attention map则是基于的前向计算
+
+
+
+> ASTER: An Attentional Scene Text Recognizer with Flexible Rectification 2018
+
+OCR的识别方法
+
+包含校正网络和识别网络两个部分，能够处理旋转或者弯曲文字
+
+<img src="/OCR_ASTER.png" style="zoom:75%;" />
+
+特点是校正网络的加入，包括对control points的预测以及利用Thin-Plate-Spline对图像进行变换
+
+<img src="/OCR_ASTER_rectification.png" style="zoom:75%;" />
+
+类似Spatial Transformer Network，通过双线性插值的方式来得到校正后各点的插值
+
+识别网络用LSTM+Attention的方式替代CTC方法
+
+
+
+> Tightness-aware Evaluation Protocol for Scene Text Detection 2019.04
+
+提出了基于紧凑性的文字检测指标，对原本IoU做二值的recall [0,1]的进一步修正。在对ICDAR2015做评价时提到了先根据word-level annotation生成text-line annotation，以便处理one-to-many或者many-to-one的情况
+
+总结处提到用于训练或者半监督学习（目前看做训练有点扯）
+
+
+
+> Self-organized Text Detection with Minimal Post-processing via Border Learning 2017
+
+行文本检测，提出将文字边界作为一类，利用FCN做三类的分割
+
+自制数据集的方法：利用PPT生成行文本训练数据集
+
+对文本长宽占比等指标进行分析
 
 
 
