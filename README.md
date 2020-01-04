@@ -54,6 +54,18 @@ image cascade net, 这里的实时还是指计算机上显卡
 
 ![Semantic_AttentionGate](/Semantic_AttentionGate.png)
 
+#### Portrait
+
+> Automatic Portrait Segmentation for Image Stylization 2016
+
+PortraitFCN+, **虽然是工程向的文章，但是细节说得较少，对于特定条件下构建提升分割性能的手段值得深思**
+
+引入了相对人脸中心归一化的x，y坐标通道
+
+**Position Channels** The objective of these channels is to encode the pixel positions relative to the face. Intuitively, this procedure expresses the position of each pixel in a coordinate system centered on the face and scaled according to the face size.
+
+**Shape Channel** By including a channel in which a subject-shaped region is aligned with the actual portrait subject, we are explicitly providing a feature to the network which should be a reasonable initial estimate of the final solution.
+
 
 
 > Fast Deep Matting for Portrait Animation on Mobile Phone 2017.07
@@ -82,7 +94,25 @@ the matting module is highly nonlinear and trained to focus on structural patter
 
 
 
+> Context-Aware Image Matting for Simultaneous Foreground and Alpha Estimation 2019.10
 
+该方法设计了两个encoder支路，分别完成context information和local features的提取，之后用两个解码支路分别完成alpha通道和前景的预测。对于context 支路采用了4次降尺度，而local支路采用了2次降尺度，同时local支路还会采用skip connection与解码网络进行拼接。
+
+在对alpha通道和前景通道预测结果进行监督训练时，采用了两种主要的损失函数，一种是alpha通道采用Laplacian pyramid，进行多尺度的损失计算。一种是特征损失，在gt 前景的基础上，通过gt alpha和预测alpha的合成图在网络层中的特征差异进行比对。
+
+$\mathcal{L}_{F}^{\alpha} = \sum_{layer} \| \phi_{layer} (\hat{\alpha} \ast \hat{F} )- \phi_{layer}(\alpha \ast \hat{F})\|$
+
+网络采用的是VGG16中的conv1_2, conv2_2, conv3_3和conv4_3层
+
+对于前景通道，一个是采用特征损失，在gt alpha的基础上，通过gt foreground和预测前景的合成图在网络中进行特征差异的比对。第二个是L1 loss，对于gt alpha大于0的区域进行前景损失的计算
+
+<img src="/Seg_ContextAwareMatting.png" style="zoom:75%;" />
+
+该方法对于样本的生成进行了较为详细的描述，特别是选取trimap包含unknown区域的处理，同时对样本增强后在边缘处的合成效果进行了细致地观察，提出用re-jpeg和gaussian smoothing的方式，避免网络对光滑的背景产生错误的bias。
+
+
+
+#### Weakly
 
 > FickleNet: Weakly and Semi-supervised Semantic Image Segmentation using Stochastic Inference 2019.03
 
@@ -97,6 +127,28 @@ FickleNet can be regarded as a generalization of dilated convolution.
 We do not drop the center of the kernel of each sliding window position, so that relationships between kernel center and other locations in each stride can be found. 中心点类似于参考点，保持其不变应该是为了稳定训练过程。
 
 弱监督能否去学习语义边界？
+
+
+
+> CANet: Class-Agnostic Segmentation Networks with Iterative Refinement and Attentive Few-Shot Learning 2019.03
+
+小样本分割采用双支路（a support branch and a query branch）
+
+support和query之间采用metric learning来比对，对于support采用其ground truth区域的global pooling来表征，然后和query的feature map做比对，比对函数通过网络学习
+
+对于k-shot的情况，设计了一个带attention的网络，用于筛选合适的物体
+
+<img src="/Seg_CANet.png" style="zoom:75%;" />
+
+对于Dense Comparison Module，主要是加了比对函数的网络，而不是直接对特征进行相似度计算
+
+对于Iterative Iptimization Module，主要是设计了残差网络来调整前次分割结果可能对输入造成的分布影响
+
+attention模块感觉是增量性的工作
+
+
+
+
 
 #### Video
 
