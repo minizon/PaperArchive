@@ -20,6 +20,16 @@ image cascade net, 这里的实时还是指计算机上显卡
 
 
 
+>UNet++: Redesigning Skip Connections to Exploit Multiscale Features in Image Segmentation 2019.12
+
+主要思路是UNet的嵌套，再加上Deeply supervised learning。它提到了和Deep layer aggregation思想类似。
+
+<img src="/Seg_UNetplusplus.png" style="zoom:75%;" />
+
+这类方法其实与densenet类似，存在的问题就是推理速度，尤其是是否适合在移动端部署？
+
+
+
 > Panoptic Feature Pyramid Networks
 
 在mask rcnn的基础上并行一路semantic segmentaion，实现panoptic segmentation。
@@ -655,9 +665,19 @@ To provide an effective supervised initialization procedure we introduce a form 
 
 
 
+### Arch
+
+> Deep Layer Aggregation CVPR2018
+>
+>  Trevor Darrell
+
+UNet++也是跟这个思路类似，即在长距离（低尺度）的skip connection之间加入升降尺度，甚至与Auto-DeepLab搜索出的结构有一样的启发
+
+<img src="/Arch_DLA.png" style="zoom:75%;" />
 
 
-### Block
+
+#### Block
 
 > Bilinear CNNs for Fine-grained Visual Recognition 2017.05
 
@@ -887,6 +907,14 @@ OCR的识别方法
 
 
 
+> Graph Convolution for Multimodal Information Extraction from Visually Rich Documents 2019.03
+
+视觉富文本使用结构推理的前提是单纯的文本识别无法准确判别实体，需要视觉和布局信息来确定实体。
+
+模板解决不了的原因是，模板本身一旦数量级上去了，会导致系统无法扩展，另一个是图像扭曲、模糊或者被干扰，造成匹配错误
+
+
+
 
 
 ### Visualization
@@ -994,6 +1022,44 @@ NAS的问题是将原本网络结构设计时的一些超参进行简化，同�
 作者通过编辑距离和高斯过程来对网络的搜索过程进行参数化，文中提到了树状结构搜索中的$A^{\star}$算法
 
 文中定义了四种操作，加层deep，加滤波器数量wide，加求和操作skip，加拼接操作concatenate
+
+
+
+### Bayesian
+
+>BatchBALD: Efficient and Diverse Batch Acquisition for Deep Bayesian Active Learning 2019.06
+
+In AL, the formativeness of new points is assessed by an acquisition function. There are a number of intuitive choices, such as model uncertainty and mutual information.
+
+BALD is based on mutual information and scores points based on how well their label would inform us about the true model parameter distribution.
+
+要实现对模型参数的预测，就需要引入bayesian的方法，从后验概率来处理
+
+In deep learning models, we generally treat the parameters as point estimates instead of distributions. However, Bayesian neural networks have become a powerful alternative to traditional neural networks and do provide a distribution over their parameters.
+
+贝叶斯方法把传统的权值预测变为分布预测
+
+Naively finding the best batch to acquire requires enumerating all possible subsets within the available data, which is intractable as the number of potential subsets grows exponentially with the acquisition size b and the size of available points to choose from. Instead, we develop a greedy algorithm that selects a batch in linear time, and show that it is at worst a $1-1/e$ approximation to the optimal choice for our acquisition function.
+
+文章对bayesian active learning的数学定义值得参考
+
+从数学上定义清楚问题：
+
+BALD uses an acquisition function that estimates the mutual information between the model predictions and the model parameters. 
+
+$I(y;w|x,D_{train}) = H(y|x, D_{train}) - E_{p(w|D_{train})}[H(y|x,w,D_{train})]$
+
+in deep learning, retraining takes a substantial amount of time.
+
+期望的求取就涉及到Monte-Carlo方法
+
+局限性：
+
+Unbalanced datasets. 如果测试集是不均匀的，该方法表现欠佳。这个是本身分布就不同的问题
+
+Unlabelled data. BatchBALD does not take into account any information from the unlabelled dataset. Semi-supervised learning could improve these estimates by  providing more information about the underlying structure of the feature space. 也就是diversity的问题还是存在的
+
+Noisy estimator. 蒙特卡罗的变分近似会引入噪声
 
 
 
