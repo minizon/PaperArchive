@@ -30,6 +30,28 @@ image cascade net, 这里的实时还是指计算机上显卡
 
 
 
+> Learning Fully Dense Neural Networks for Image Semantic Segmentation 2019.05
+
+特征复用和Focal loss在边界上的应用
+
+<img src="/Segmentation_FDNet.png" style="zoom: 50%;" />
+
+<img src="/Segmentation_FDNet2.png" style="zoom:75%;" />
+
+
+
+> Gated-SCNN: Gated Shape CNNs for Semantic Segmentation 2019.07
+
+本文从边界的视角对网络进行了处理，加入了shape stream用于显示的边界生成，再将其作为特征用于后续的网络分割
+
+GSL的设计思想是通过high level的语义来滤除边界上的毛刺（noise，或者非语义的边缘），shape stream利用edge bce loss来引导其完成这个边界预测的任务（**当然要去边界比较准**）。通过ASPP对图像梯度和边界的引入来生成最终的分割结果。这样缓解了regular支路对边缘的学习（或者是low level对边缘学习的过分侧重）。
+
+Dual task是对边缘部分做的精细化loss，对分割结果的边界进行二次loss计算，同时对shape stream上预测的强边界做正则（这部分比较像trick）
+
+![](/Segmentation_GSCNN.png)
+
+
+
 > Panoptic Feature Pyramid Networks
 
 在mask rcnn的基础上并行一路semantic segmentaion，实现panoptic segmentation。
@@ -63,6 +85,8 @@ image cascade net, 这里的实时还是指计算机上显卡
 ![Semantic_AttentionUnet](/Semantic_AttentionUnet.png)
 
 ![Semantic_AttentionGate](/Semantic_AttentionGate.png)
+
+
 
 #### Portrait
 
@@ -104,6 +128,20 @@ the matting module is highly nonlinear and trained to focus on structural patter
 
 
 
+>  Disentangled Image Matting 2019.09
+>
+> 旷视
+
+同样是trimap和alpha估计是不同任务的出发点，在构造网络时利用了双解码器各自完成任务，并使用了ConvLSTM完成propagation的机制。
+
+提出trimap是偏向语义结构，因此偏重用高阶的特征；alpha估计是偏向photometric（光学），需偏重低阶的特征。文中用了很多技术组合：large kernel增大视野，LSTM完成多次传导，uncertainty的多任务学习
+
+![](/Segmentation_AdaMatting.png)
+
+除了炒冷饭，其实我们还是需要去思考下，现在这些网络结构是否对任务分支有新的理解，对特征复用有新的尝试（跳跃连接，视场，上下文，效率）。例如这里在得到trimap和alpha粗略估计后，使用resblock进行propagation，这与CANet中迭代采用residual结构也很类似。
+
+
+
 > Context-Aware Image Matting for Simultaneous Foreground and Alpha Estimation 2019.10
 
 该方法设计了两个encoder支路，分别完成context information和local features的提取，之后用两个解码支路分别完成alpha通道和前景的预测。对于context 支路采用了4次降尺度，而local支路采用了2次降尺度，同时local支路还会采用skip connection与解码网络进行拼接。
@@ -119,6 +157,12 @@ $\mathcal{L}_{F}^{\alpha} = \sum_{layer} \| \phi_{layer} (\hat{\alpha} \ast \hat
 <img src="/Seg_ContextAwareMatting.png" style="zoom:75%;" />
 
 该方法对于样本的生成进行了较为详细的描述，特别是选取trimap包含unknown区域的处理，同时对样本增强后在边缘处的合成效果进行了细致地观察，提出用re-jpeg和gaussian smoothing的方式，避免网络对光滑的背景产生错误的bias。
+
+
+
+> FIGARO, HAIR DETECTION AND SEGMENTATION IN THE WILD
+
+介绍了如何去构造一个头发分割的数据集，用的是人工特征加超像素的分割方法
 
 
 
@@ -158,6 +202,24 @@ attention模块感觉是增量性的工作
 
 
 
+#### Instance
+
+> Pixel-level Encoding and Depth Layering for Instance-level Semantic Labeling 2016.07
+
+该方法在语义分割的基础上利用depth 估计和instance（各点相对中心点）的方向估计来区分出各个instance。
+
+<img src="/Seg_InstanceDepthandDirection.png" style="zoom:75%;" />
+
+特别针对方向部分的处理，其采用了量化的方式，把每个量化角度作为一个类在同一个输出通道上进行，这与一些分通道输出的方式又有所不同。
+
+
+
+> Hybrid Task Cascade for Instance Segmentation 2019.01
+
+![](/Segmentation_HTC.png)
+
+主要思想还是通过设计反向传播时的flow，以使信息可以方便地回传到特征学习的backbone上
+
 
 
 #### Video
@@ -165,6 +227,30 @@ attention模块感觉是增量性的工作
 > Video Object Segmentation and Tracking: A Survey 2019
 
 比较普通的总结，列举了一些数据集
+
+
+
+> End-to-End Learning of Motion Representation for Video Understanding 2018.04
+
+TVNet，对原本的TV-L1求解过程展开成网络形式
+
+
+
+#### Interactive
+
+> Efficient Interactive Annotation of Segmentation Datasets with Polygon-RNN++ 2018.03
+
+堆砌了RNN，RL，GNN，attention多种技术，实现交互式的物体轮廓生成
+
+<img src="/Segmentation_PolyRNNplusplus.png" style="zoom:75%;" />
+
+
+
+> Fast Interactive Object Annotation with Curve-GCN 2019.03
+
+图卷积的形式 https://github.com/fidler-lab/curve-gcn
+
+![](/Segmentation_CurveGCN.png)
 
 
 
@@ -271,15 +357,25 @@ The standard SSD performs action detection from multiple feature maps with diffe
 
 
 
+> DeepVS: A Deep Learning Based Video Saliency Prediction Approach
+
+![](/Detection_DeepVS.png)
+
+同时利用物体特征和运动特征，单整体网络结构较重，特别还利用LSTM实现帧间的显著性平滑
+
+**在显著性训练时使用KL散度来计算loss**
+
+
+
 ### NLP
 
 > Attention Is All You Need 2017.12
 
 去掉RNN，只利用attention和fc完成ecode-decode过程
 
-![NLP_Transformer](/NLP_Transformer.png)
+<img src="/NLP_Transformer.png" alt="NLP_Transformer" style="zoom:50%;" />
 
-![NLP_Transformer2](/NLP_Transformer2.png)
+<img src="/NLP_Transformer2.png" alt="NLP_Transformer2" style="zoom:50%;" />
 
 注意力公式$Attention (Q,K,V) = softmax(\frac{QK^{T}}{\sqrt{d_{k}}})V$
 
@@ -307,7 +403,7 @@ Multi-head的关系式$d_{k}=d_{v}=d_{model}/h=64, \, h=8$
 
 用的是Noisy-OR MIL，用一个global threshold得到图片可用的word
 
-![Caption_VisualConcept](/Caption_VisualConcept.png)
+<img src="/Caption_VisualConcept.png" alt="Caption_VisualConcept" style="zoom:50%;" />
 
 
 
@@ -317,7 +413,7 @@ Multi-head的关系式$d_{k}=d_{v}=d_{model}/h=64, \, h=8$
 
 整体是从图像侧改进
 
-![Caption_TopDown](/Caption_TopDown.png)
+<img src="/Caption_TopDown.png" alt="Caption_TopDown" style="zoom:50%;" />
 
 下层完成注意力的特征选择，上层是单层的语言模型
 
@@ -340,6 +436,26 @@ Multi-head的关系式$d_{k}=d_{v}=d_{model}/h=64, \, h=8$
 对文本描述提出了descriptive的要求，可用于text retrieval或者image retrevial；discriminative体现在生成的语句应该返回去能够检索到相应的图片，从而让caption的过程去关注图片上相对有差异的部分
 
 利用 “Vse++: Improved visual-semantic embeddings”实现对image&caption embedding的学习，再利用SCST结合Cider来训练；图像的特征基于Visual Genome来完成
+
+
+
+> Unsupervised Image Captioning 2019.04
+>
+> Tecent
+
+无监督的文本标注，该方法是通过对抗生成的方式使得从图像特征到句子符合词库的陈述，同时通过一个visual concept detector来对齐图像和生成句子中的关键词，在利用生成器和判别器的互换（cyclegan的形式）使得图像和句子能在common latent space中对齐
+
+![](/NLP_unsupervised.png)
+
+![](/NLP_unsupervised2.png)
+
+
+
+> Semantic Compositional Networks for Visual Captioning 2017.03
+
+顾名思义，利用visual concepts补全成句子
+
+<img src="/NLP_SCN.png" style="zoom:75%;" />
 
 
 
@@ -413,6 +529,12 @@ To prevent mode collapse problem, we followed the strategy of WGAN.
 
 #### Video
 
+> Action Recognition with Improved Trajectories 2013
+
+主要的想法是消除相机运动的影响，具体是去除人体部分，对背景的运动进行估计以此抵消相机运动，使用RANSAC方法估计环境的一致性
+
+
+
 > What Actions are Needed for Understanding Human Actions in Videos? 2017.08
 
 探讨分析动作分类的一些问题：
@@ -423,7 +545,7 @@ To prevent mode collapse problem, we followed the strategy of WGAN.
 
 
 
-> Quo Vadis, Action Recognition? A New Model and the Kinetics Dataset  2017.5
+> Quo Vadis, Action Recognition? A New Model and the Kinetics Dataset  2017.05
 
 探讨了预训练对视频分类的作用，通过将2D网络结构沿时间维拼接成3D网络结构(inflate)
 
@@ -456,6 +578,12 @@ These methods assume that focusing on the human or its parts is always usefull f
 作者用类似secord-order pooling的方式来实现所谓的both predict and apply an attention map，并且利用low-rank approximation来避免显式计算二阶特征
 
 ![Classification_AttentionPooling](/Classification_AttentionPooling.png)
+
+
+
+> Video Representation Learning Using Discriminative Pooling
+
+利用MIL 和SVM做pooling
 
 
 
@@ -617,6 +745,38 @@ spatial支路各帧用2D卷积，temporal支路各帧用3D卷积
 
 
 
+#### Semi-supervised
+
+>  Tri-Training: Exploiting Unlabeled Data Using Three Classifiers 2005
+>
+>  周志华
+
+co-training方法
+
+新增一个分类器用于无标签样本的训练
+
+In each round of tri-training, an unlabeled example is labeled for a classifier if the other two classifiers agree on the labeling, under certain conditions.
+
+原本的co-training是从不同特征上去分类的： A prominent achievement in this area is  the co-training paradigm proposed by Blum and Mitchell, which trains two classifiers separately on two different views, i.e. two independent sets of attributes, and uses the predictions of each classifier on unlabeled examples to augment the training set of the other.
+
+tri-training 则通过三个分类器之间的相互提升（1 vs 2）实现对无标记样本的纳入。
+
+
+
+> Learning from Web Data with Memory Module 2019.06
+
+处理两种噪声：label noise 和background noise
+
+总体还是用MIL，对待label noise采用多图片，对待background noise采用proposals（利用edge box提取）
+
+![](/Classification_webdata.png)
+
+该方法采用了key memory的这种形式，但它做了一些调整
+
+首先，它的memory module采用了聚类的方式获得，在计算各个instance与聚类中心的相似度时分成了两部分，一部分叫discriminative，另一部分叫representative。聚类采用SOM算法得到。训练时还采用了curriculum learning来稳定训练过程，先易后难。
+
+
+
 #### Zero Shot
 
 >  From Red Wine to Red Tomato: Composition with Context 2017
@@ -665,6 +825,22 @@ To provide an effective supervised initialization procedure we introduce a form 
 
 
 
+### Recommendation
+
+> From Zero-Shot Learning to Cold-Start Recommendation 2019.06
+
+cold-start recommendation can be defined as a problem to generate recommendations for a fresh user where we have nothing about the user in the behavior space but some side information about the user in the attribute space.
+
+作者应用zero-shot learning的思想，利用low-rank linear autoencoder，实现从attribute space到behavior space的重建
+
+<img src="/Recommend_ZSL.png" style="zoom:80%;" />
+
+关于推荐多样性的思考，如果单纯是重建的话，其实解还是唯一的。那么如果需要做一对多的映射，一种是否是加白噪声扰动（或者辅助属性，类似多样的风格化）；一种是bayesian网络。并且相对数据集上的评价，实际场景往往会是一个开放性问题。
+
+<img src="/Recommend_ZSL2.png" style="zoom:75%;" />
+
+
+
 ### Arch
 
 > Deep Layer Aggregation CVPR2018
@@ -677,7 +853,63 @@ UNet++也是跟这个思路类似，即在长距离（低尺度）的skip connec
 
 
 
+#### Heterogeneous
+
+> TernaryNet: faster deep model inference without GPUs for medical 3D segmentation using sparse and binary convolutions
+
+利用只有$\{-1,0,1\}$三个取值的神经元构建网络，利用Hamming distance来进行卷积运算
+
+
+
 #### Block
+
+> Deformable Convolutional Networks 2017.06
+
+DeformConv是在原有卷积的基础上增加了对位置偏移量的估计，这种方式和shift有些类似，对应的运动参考系不同。
+
+<img src="/Block_DeformConv.png" style="zoom:75%;" />
+
+As illustrated in Figure 2, the offsets are obtained by applying a convolutional layer over the same input feature map. The convolution kernel is of the sample spatial resolution and dilation as those of the current convolutional layer. 所以DeformConv是在网络层上并联了一个分支用于修改原本卷积的固定位置。
+
+思考：类似SENet是更改了通道的权重，那对通道而言有没有更精细的方式呢？或者是否需要有什么样的约束可以理想实验上比较合理（比如不同位置的通道作用程度是不一样的，但是又要保持一点的spatial continuous）
+
+特别要提下的是该文其实还提出了Deformable ROI pooling
+
+<img src="/Block_DeformPooling.png" style="zoom:75%;" />
+
+针对ROI offsets的预测稍微不太一样的是，它通过原本ROI pooling的特征图加上FC后预测得到normalized offsets，这个normalized offsets是相对ROI的高宽做过约束的。
+
+另外值得一提的是，该文详细讨论了几种类似的思想，例如：
+
+1. Spatial Transform Network 整个feature map的仿射变换
+2. Active Convolution 各个位置共享偏移量，这就跟shift操作很像了
+3. Effective Receptive Field DeformConv确实改变了网络的视场，**传统网络有效视场随深度是平方根增长，并非计算公式的线性增长**
+4. Atrous Convolution 可以看出是DeformConv的特例
+5. Dynamic Filter 卷积核权重随位置变换，并非采样位置本身；这里是否又可以引出图的概念，如何去定义affinity
+
+接下来的问题便是，deformconv放哪里，提升了多少
+
+**实验测试一般放在res5上，点数提升上对DeepLab和RPN帮助较大，对二阶的Faster RCNN不太明显**
+
+
+
+> Drop an Octave: Reducing Spatial Redundancy in Convolutional Neural Networks with Octave Convolution 2019.04
+
+考虑在卷积操作中区分低频和高频信息
+
+related work 包括multigrid convolution, Xception， MobileNet， NAS， PNAS, AmoebaNet,也包括了ThiNet (prunes convolutional filters based on statistics computed from its next layer.) HetNet (replaces the vanilla convolution filters with heterogeneous convolution filters that are in different sizes.)
+
+也和多尺度的一些网络结构有联系
+
+在处理高频和低频表征时，是对通道进行了区分，利用$\alpha \in [0,1]$控制高低频的比例
+
+<img src="/Block_OctConv.png" style="zoom:75%;" />
+
+相对于factorize 卷积核，OctConv拆分了特征图，一部分是$h \times w$全尺寸对应高频，一部分是$h/2 \times w/2$半尺寸对应低频
+
+**需要注意的是：除了高频对高频、低频对低频的独立输出外，卷积也对高低频之间的交互作了建模**，在高频到低频的过程中还对降尺度的方式进行了讨论（不是简单的用stride来处理， strided  convolution leads to misalignment）$\alpha$在实验中取值0.125
+
+
 
 > Bilinear CNNs for Fine-grained Visual Recognition 2017.05
 
@@ -743,7 +975,7 @@ The prerequisite of SSL is to ensure shift operation learnable. A common solutio
 
 整体网络还使用了Fully-Exploited结构，将通道分组，部分通道直接进入下个stage
 
-需要可以复用内存的深度学习框架？
+需要可以复用内存的深度学习框架，才能提高真实运行速度？
 
 
 
@@ -793,6 +1025,12 @@ We use graphs to decribe this behavior because graphs are more structured than n
 
 用到人脸检测，对话文本，利用RNN完成交互、推理
 
+
+
+> Video Relationship Reasoning using Gated Spatio-Temporal Energy Graph 2019.03
+
+利用CRF完成多标签推理的过程？引入时序的关系
+
 #### Forecasting
 
 > Peeking into the Future: Predicting Future Person Activities and Locations in Videos 2019.02
@@ -841,18 +1079,100 @@ $L_{3} = -\frac{1}{N} \sum_{i=1}{N} \log\frac{e^{s(\cos(\theta_{y_{i}}+m))}}{e^{
 
 
 
+> Look at Boundary: A Boundary-Aware Face Alignment Algorithm 2018.05
+
+该文主要针对遮挡、形变等情况利用边缘检测的方法来提高人脸关键点landmark定位准确性。
+
+*It is easier to identify facial boundaries comparing to facial landmarks under large pose and occlusion.* **如何可以断定这样的结论？多变量的联合分布比独立（或者也并非独立只是不相关）分布更容易拟合？**
+
+文中利用stacked hourglass来预测边界的热力图，通过GAN来判断边界预测是否合理，需要注意的是其通过关键点构造边界的方式，以及其中介绍的message passing实现（Structured feature learning for pose estimation）
+
+![](/Face_Boundary.png)
+
+
+
+
+
+> Large Scale 3D Morphable Models 2018
+
+标准脸加现有脸的线性组合
+
+![](/Face_3DMM.png)
+
+
+
+> A Morphable Model For The Synthesis Of 3D Faces
+
+New faces and expressions can be modeled by forming linear combinations of the prototypes
+
+
+
+> Large Pose 3D Face Reconstruction from a Single Image via Direct Volumetric CNN Regression
+
+VRN
+
+
+
+### Pose
+
+> Photo Wake-Up: 3D Character Animation from a Single Photo 2018.12
+
+将2D人体变成3D人体：包含了分割、姿态估计、3D模型拟合的技术
+
+人体检测、分割：Mask RCNN
+
+pose estimation： Convolutional Pose Machines
+
+人体精细分割：Dense CRF
+
+纹理填充：PatchMatch
+
+人体3D拟合： SMPL: a skinned multi-person linear model, Keep it SMPL
+
+动作序列：CMU Graphics Lab Motion Capture Database
+
+![](/Pose_Wakeup.png)
+
+
+
+> Everybody Dance Now 2019.08
+
+通过人体关键点和人脸精细仿真实现视频级舞蹈动作迁移
+
+Our work is made possible by recent rapid advances along two separate directions: robust  pose estimation, and realistic image-to-image translation.
+
+姿态估计： OpenPose
+
+图像生成：pix2pixHD， CoGAN， CycleGAN, DiscoGan, Cascaded Refinement Network, unsupervised image-to-image translation
+
+针对视频级别的动作生成，采用了连续两帧的生成用于平滑
+
+![](/Pose_Dance.png)
+
+这里有个问题是每个目标任务都需要训练一个网络，同时其需要目标有足够的动作可供训练
+
+类似技术 MoCoGAN（分离动作和表象）
+
+对人脸进行了细化
+
+![](/Pose_Dance2.png)
+
+
+
+
+
 
 ### Image Synthesis
 
-- High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs 2018.8
+> High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs 2018.8
 
-  <https://github.com/NVIDIA/pix2pixHD>
+<https://github.com/NVIDIA/pix2pixHD>
 
-  尺度1024x2048
+尺度1024x2048
 
-  采用了coarse-to-fine的策略，现在512x1024上生成。Loss方面不仅用GAN loss，还在discriminator的中间层进行feature matching。针对instance引入edge map使得边界上有较强的先验信息。
+采用了coarse-to-fine的策略，现在512x1024上生成。Loss方面不仅用GAN loss，还在discriminator的中间层进行feature matching。针对instance引入edge map使得边界上有较强的先验信息。
 
-  ![GAN_pix2pixHD](/GAN_pix2pixHD.png)
+![GAN_pix2pixHD](/GAN_pix2pixHD.png)
 
 
 
@@ -917,13 +1237,31 @@ OCR的识别方法
 
 
 
-### Visualization
+### Visualization/Interpretability
 
 > Understanding Intra-Class Knowledge Inside CNN 2015.07
 
 本文尝试可视化FC层，提及parametric visualizaton model的问题是低层视觉重建容易产生多个全局最优解而导致色彩分布与真实自然色彩分布不一致，提出用建一个自然图像的patch库来帮助重建的图像进行色彩拟合
 
 
+
+> Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization 2019.12
+
+基于梯度求取CAM，Grad-CAM is a strict generalization of CAM
+
+原本CAM需要FC层的权重来作为响应图的权重，Grad-CAM则是通过反向求导的梯度来替代，并且用CAM的特例来进行了证明
+
+$\alpha_{k}^{c}=\frac{1}{Z} \sum_{i}\sum_{j} \frac{\partial y^{c}}{\partial A_{ij}^{k}}$
+
+$L_{Grad-CAM}^{c} = ReLU(\sum_{k} \alpha_{k}^{c} A^{k})$
+
+**思考：该文展示了FC层的权重对应着反向梯度传播时各神经元接受的权重（好像本来就是这个逻辑），是否意味着反向传播其实也可以通过预测的方式来进行**
+
+
+
+> Network Dissection: Quantifying Interpretability of Deep Visual Representations 2017.04
+
+通过响应的样本统计来确定各个neuron的concept，这里比较有趣的点是interpretability与网络的discriminativity无关，也就是判断能力不能代表可解释性；另一个是网络的concept是axis-aligned，
 
 
 
@@ -1003,11 +1341,31 @@ Learnable的方式又分为hard和soft，而Spatial Transformer Networks则介�
 
 
 
-### Heterogeneous Network
+### Domain Adaption
 
-> TernaryNet: faster deep model inference without GPUs for medical 3D segmentation using sparse and binary convolutions
+> Taking A Closer Look at Domain Shift: Category-level Adversaries for Semantics Consistent Domain Adaptation 2019.04
 
-利用只有$\{-1,0,1\}$三个取值的神经元构建网络，利用Hamming distance来进行卷积运算
+对分割情况下的domain adaption，提出应关注类别层面的适配。文中采用了co-training的策略，同时用两个分类器来实现对数据分布界面的标定，使得adaption过程对**高阶结构性**有所关注（前提是存在多个等价的（次优）分类界面，通过平均后仍可得到一个最优界面）。
+
+利用不同视角下的不一致性，驱动局部的类别层面做相应的调整。这里采用的是cosine夹角作为度量
+
+<img src="/Adaption_CLAN2.png" style="zoom:75%;" />
+
+![](/Adaption_CLAN.png)
+
+思考：这种二分类器的形式能否用在其他地方，作为两个参考面的话。
+
+
+
+### Distillation
+
+> Structured Knowledge Distillation for Semantic Segmentation 2019.03
+
+在pixel-wise distillation的基础上，加入了pair-wise和holistic distillation
+
+其中pair-wise用的是特征图的gram matrix，holistic distillation用的是GAN的判别器
+
+整体上loss还是很多的，可操行有点复杂
 
 
 
@@ -1022,6 +1380,52 @@ NAS的问题是将原本网络结构设计时的一些超参进行简化，同�
 作者通过编辑距离和高斯过程来对网络的搜索过程进行参数化，文中提到了树状结构搜索中的$A^{\star}$算法
 
 文中定义了四种操作，加层deep，加滤波器数量wide，加求和操作skip，加拼接操作concatenate
+
+
+
+> NEURAL ARCHITECTURE SEARCH WITH REINFORCEMENT LEARNING 2017.02
+
+该文使用controller的概念制造每层网络参数用于构成网络，利用RL的方法将准确率作为reward来学习controller的参数。controller是一个RNN网络，每次按序生成各个层的参数
+
+![](/NAS_RL.png)
+
+针对单纯的卷积网络提出了skip connection的预测方案，在原本预测序列中插入一个动作点，预测与之前N-1层是否需要连接
+
+训练采用分布式，这里采用的是一般的采样估计
+
+![](/NAS_RL2.png)
+
+文中还介绍了用NAS的方式去生成RNN的cell结构，以区别于LSTM，GRU
+
+**该方法针对单一网络层结构内的参数选择和网络连接点选择**，可以**思考如何去模仿作者利用现有技术构造理想实验到构建具体的实践**
+
+
+
+> Learning Transferable Architectures for Scalable Image Recognition 2018.04
+
+该文在NAS的基础上，放弃了对整体网络结构的搜索，转而去构建新的Cell，通过复用新的block去实现新任务网络的搭建
+
+针对尺度不变和尺度下降两种Cell进行搜索，依然采用NAS的方法
+
+![](/NAS_NASNet.png)
+
+![](/NAS_NASNet2.png)
+
+需要注意的是，**每个Cell中一个block需重复B次，在B次的生成过程中，上一次输出状态需要加入进选择域**
+
+作者提到RL比random search略优，random search时不以RNN输出的概率结果进行采样，而是进行均匀采样
+
+在训练过程中还对cell中的连接进行ScheduledDropPath
+
+
+
+> COMPUTATION REALLOCATION FOR OBJECT DETECTION 2019.12
+
+该文是对object detection的backbone上各个stage里的卷积层进行重新的分配，包括引入dilated conv从而改善effective receptive field
+
+<img src="/NAS_CR.png" style="zoom:75%;" />
+
+<img src="/NAS_CR2.png" style="zoom:75%;" />
 
 
 
