@@ -825,6 +825,26 @@ To provide an effective supervised initialization procedure we introduce a form 
 
 
 
+#### Self-supervised Learning
+
+> A Simple Framework for Contrastive Learning of Visual Representations 2020.02
+
+无监督学习目前进化到了通过对比的方式来学习表征（思考重建相对于对比是有什么劣势吗？）
+
+本文提到了几个重要的发现：1.数据增强的方式很重要，一个几何变换和apperance变换的组合对特征学习很关键，两个近似的组合会是的模型在无监督上过拟合，而不同的变换组合虽然让对比学习的任务变难，但有助于提升表征的质量 2. 在表征和对比学习之间加入一个非线性变换对特征学习很重要，对比学习和下游分类任务是不相同的，这样会导致对比loss前的那一层特征变换到有利于对比学习的任务上，缺少了泛化能力，通过引入一层非线性变换，可以隔开与任务相关的特征提升表征的泛化性 3. 大batch和更长的训练，更大更深的网络都有助于对比学习
+
+文中提到了Global BN对SimCLR的重要性，分布式训练时独立的BN会在策略上泄露正样本对导致潜在的过拟合，对特征学习有害
+
+文中设计了多种对比学习的loss，经测试NT-Xent效果最好
+
+Linear evaluation是指冻结特征层，对最后fc层进行训练
+
+<img src="/Classification_SimCLR1.png" style="zoom: 67%;" />
+
+<img src="/Classification_SimCLR2.png" alt="Classification_SimCLR2" style="zoom:67%;" />
+
+
+
 ### Recommendation
 
 > From Zero-Shot Learning to Cold-Start Recommendation 2019.06
@@ -1176,6 +1196,20 @@ Our work is made possible by recent rapid advances along two separate directions
 
 
 
+### Image Processing
+
+> Replacing Mobile Camera ISP with a Single Deep Learning Model 2020.02
+
+该文利用华为P20拍摄的raw data和佳能拍摄的图片进行配对，通过神经网络实现ISP功能
+
+该文工作可分为两个部分：1. 训练配对数据构建，由于手机拍摄和相机拍摄存在位置的偏差（很可能还有时差），因此其提出用匹配的方式构建训练对数据。匹配的工作也是该文作者之前的构造。主要通过SIFT关键点和RANSAC算法实现。
+
+2. 作者提出了一个金字塔结构的模型，在每个层次上施加不同目标的损失，最终使得图像增强后的效果接近佳能相机
+
+<img src="/ImageProcessing_ISP.png" style="zoom:75%;" />
+
+在高尺度level4-5上施加global colorand brightness/gamma correction，在中尺度level2-3上施加VGG perceptual和MSE loss，在level 1上施加VGG perceptual、SSIM、MSE三种loss
+
 
 
 
@@ -1326,6 +1360,14 @@ Global Attention Upsample 与Attention Unet的Attention Gate具有明显的不�
 提到了attention可以分为post hoc的方式和learnable的方式，基于梯度的和周博磊的CAM属于post hoc。并且CAM improved localisation performance comes at the cost of classification accuracy.
 
 Learnable的方式又分为hard和soft，而Spatial Transformer Networks则介于两者之间。It uses a prameterised transform to estimate hard attention on the input image deterministically, where the parameters of the image transformation are estimated using differentiable functions.(这里的技巧是将输出响应与位置的偏移量联系起来，这样在求导时map的坐标位置也成了输入量求偏导)
+
+
+
+> Exploring Self-attention for Image Recognition CVPR2020
+
+<img src="/Attention_selfattention.png" style="zoom:75%;" />
+
+除了常见的pairwise attention，作者提出了patchwise attention的概念。相对于pairwise的加权组合，patchwise引入了patch中的竞争，更像是high order的建模
 
 
 
